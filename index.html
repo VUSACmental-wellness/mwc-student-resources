@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Victoria College Mental Wellness — Resource Directory (Prototype)</title>
+<style>
+  :root {
+    --bg: #FAF7F2;
+    --surface: #FFFFFF;
+    --border: #E5E0D5;
+    --ink: #22303A;
+    --ink-soft: #5B6B73;
+    --teal: #3F7C74;
+    --teal-dark: #2C5951;
+    --gold: #C68A2E;
+    --crisis: #A6452F;
+    --crisis-bg: #FBEDE8;
+    --chip-bg: #EFEAE0;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    line-height: 1.5;
+  }
+  h1, h2, .display {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  /* Crisis bar — always visible, never filtered away */
+  .crisis-bar {
+    background: var(--crisis-bg);
+    border-bottom: 1px solid #E8C9BE;
+    padding: 12px 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 24px;
+    align-items: center;
+    font-size: 14px;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+  .crisis-bar strong { color: var(--crisis); font-weight: 700; }
+  .crisis-bar a { color: var(--crisis); font-weight: 600; text-decoration: none; }
+  .crisis-bar a:hover { text-decoration: underline; }
+
+  header.hero {
+    padding: 40px 20px 24px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  header.hero h1 { font-size: clamp(28px, 4vw, 38px); margin: 0 0 8px; color: var(--teal-dark); }
+  header.hero p { color: var(--ink-soft); max-width: 60ch; margin: 0; font-size: 15px; }
+
+  .controls {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 20px 8px;
+    position: sticky;
+    top: 46px;
+    background: var(--bg);
+    z-index: 15;
+    padding-top: 8px;
+  }
+  .search-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  #search {
+    flex: 1;
+    padding: 12px 16px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    font-size: 15px;
+    background: var(--surface);
+    color: var(--ink);
+  }
+  #search:focus { outline: 2px solid var(--teal); outline-offset: 1px; }
+
+  .chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .chip {
+    padding: 7px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--chip-bg);
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--ink);
+    user-select: none;
+  }
+  .chip[aria-pressed="true"] {
+    background: var(--teal);
+    border-color: var(--teal);
+    color: white;
+  }
+  .result-count { font-size: 13px; color: var(--ink-soft); margin-bottom: 4px; }
+
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 8px 20px 60px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+    margin-top: 12px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .card h3 { margin: 0; font-size: 16px; font-family: inherit; font-weight: 700; }
+  .tags { display: flex; flex-wrap: wrap; gap: 5px; margin: 2px 0 4px; }
+  .tag {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--chip-bg);
+    color: var(--ink-soft);
+  }
+  .tag.crisis-tag { background: var(--crisis-bg); color: var(--crisis); }
+  .tag.free-tag { background: #E4F1E8; color: #2E6B44; font-weight: 600; }
+
+  .reassurance {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 20px;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+  }
+
+  .quiz-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 10px 0 16px;
+    padding: 9px 16px;
+    border-radius: 999px;
+    border: 1px solid var(--teal);
+    background: var(--surface);
+    color: var(--teal-dark);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .quiz-toggle:hover { background: #EEF6F4; }
+
+  .quiz-panel {
+    display: none;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    margin-bottom: 16px;
+  }
+  .quiz-panel.open { display: block; }
+  .quiz-panel h4 { margin: 0 0 10px; font-size: 14px; }
+  .quiz-options { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .quiz-options button {
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--chip-bg);
+    font-size: 13.5px;
+    cursor: pointer;
+    color: var(--ink);
+  }
+  .quiz-options button:hover { border-color: var(--teal); }
+  .quiz-step-label { font-size: 12px; color: var(--ink-soft); text-transform: none; margin-bottom: 4px; }
+  .card p.purpose { font-size: 13.5px; color: var(--ink-soft); margin: 0; }
+  .card .meta { font-size: 13px; margin-top: 4px; }
+  .card .meta a { color: var(--teal-dark); text-decoration: none; }
+  .card .meta a:hover { text-decoration: underline; }
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--ink-soft);
+  }
+  .note {
+    max-width: 900px;
+    margin: 40px auto 0;
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+</style>
+</head>
+<body>
+
+<div class="crisis-bar">
+  <span><strong>In crisis right now?</strong></span>
+  <span>Campus Emergency: <a href="tel:4169782222">416-978-2222</a></span>
+  <span>Distress Centre (24/7): <a href="tel:4164084357">416-408-4357</a></span>
+  <span>Good2Talk: <a href="tel:18669255454">1-866-925-5454</a></span>
+</div>
+
+<header class="hero">
+  <h1>Mental Wellness Resource Directory</h1>
+  <p>A prototype showing how Victoria College's existing resource list could work as a searchable, filterable directory instead of one long page. Real resources from your current site — reorganized only.</p>
+</header>
+
+<p class="reassurance">You don't need to be in a crisis to use this page. Nothing here requires you to sign in, and nothing you search is saved or tracked.</p>
+
+<div class="controls">
+  <button class="quiz-toggle" id="quizToggle" style="margin-left:20px;">✦ Not sure where to start? Answer 2 quick questions</button>
+  <div class="quiz-panel" id="quizPanel">
+    <div id="quizStep1">
+      <div class="quiz-step-label">Question 1 of 2 — What kind of support are you looking for?</div>
+      <h4>Pick whichever feels closest</h4>
+      <div class="quiz-options">
+        <button data-cat="Crisis">I need to talk to someone urgently</button>
+        <button data-cat="Counselling">I want ongoing, in-person support</button>
+        <button data-cat="Self-Guided">I'd rather try something on my own, quietly</button>
+        <button data-cat="Housing">It's a practical problem (housing, safety, academics)</button>
+      </div>
+    </div>
+    <div id="quizStep2" style="display:none;">
+      <div class="quiz-step-label">Question 2 of 2 — Optional, only if it helps</div>
+      <h4>Is there a community-specific service you'd prefer?</h4>
+      <div class="quiz-options">
+        <button data-tag="LGBTQ+">LGBTQ+ specific</button>
+        <button data-tag="Indigenous">Indigenous specific</button>
+        <button data-tag="Women">Women specific</button>
+        <button data-tag="">No preference — show me everything</button>
+      </div>
+    </div>
+  </div>
+  <div class="search-row">
+    <input id="search" type="text" placeholder="Search by name, need, or keyword (e.g. 'housing', 'LGBTQ', 'free app')" aria-label="Search resources">
+  </div>
+  <div class="chip-row" id="chipRow"></div>
+  <div class="result-count" id="resultCount"></div>
+</div>
+
+<main>
+  <div class="grid" id="grid"></div>
+  <div class="empty-state" id="emptyState" style="display:none;">
+    No resources match. Try a different search term, or clear a filter.
+  </div>
+</main>
+
+<div class="note">
+  Prototype note: this uses a real subset of the resources from the current Google Site to demonstrate search + category filtering. A production version would include the full ~60-resource list, tagged the same way, and could be published on WordPress, Wix, or as this same static file hosted anywhere.
+</div>
+
+<script>
+const resources = [
+  {name:"UofT My Student Support Program (My SSP)", cat:"Counselling", tags:["Free","24/7","Phone/App"], purpose:"24/7 mental health and counselling in 146 languages, by phone or app.", link:"https://mentalhealth.utoronto.ca/my-student-support-program/", contact:"1-844-451-9700"},
+  {name:"NAVI", cat:"Counselling", tags:["Free","Chatbot"], purpose:"Chat-based assistant that helps you find the right UofT or community resource.", link:"https://prod.virtualagent.utoronto.ca/"},
+  {name:"Health & Wellness Centre (Victoria College)", cat:"Counselling", tags:["Free","In-person","On-campus"], purpose:"Free, short-term individual counselling for Victoria College students.", link:"https://studentlife.utoronto.ca/department/health-wellness/", contact:"416-978-8030"},
+  {name:"OISE Psychology Clinic", cat:"Counselling", tags:["In-person","On-campus"], purpose:"Psychological assessments and psychotherapy on campus.", link:"https://www.oise.utoronto.ca/aphd/Home/Psychology_Clinic/index.html", contact:"416-978-0620"},
+  {name:"Distress Centres of Greater Toronto", cat:"Crisis", tags:["Free","24/7","Crisis"], purpose:"24/7 hotline, online chat and text support for anyone in crisis.", link:"https://www.dcogt.com/our-organization", contact:"416-408-4357"},
+  {name:"Gerstein Centre Crisis Line", cat:"Crisis", tags:["Free","24/7","Crisis"], purpose:"24-hour crisis line plus short-term follow-up support and referrals.", link:"https://gersteincentre.org/", contact:"416-929-5200"},
+  {name:"Good2Talk Student Helpline", cat:"Crisis", tags:["Free","24/7","Crisis"], purpose:"Post-secondary helpline connecting students to counsellors, or trained volunteers by text.", link:"https://good2talk.ca/ontario/", contact:"1-866-925-5454"},
+  {name:"Assaulted Women's Helpline", cat:"Crisis", tags:["Free","24/7","Women"], purpose:"Anonymous crisis counselling, safety planning and referrals for survivors of abuse.", link:"https://www.awhl.org/home", contact:"416-863-0511"},
+  {name:"The Trevor Project", cat:"Crisis", tags:["Free","24/7","LGBTQ+"], purpose:"Crisis intervention and suicide prevention for LGBTQ+ young people.", link:"https://www.thetrevorproject.org/", contact:"1-866-488-7386"},
+  {name:"Trans Lifeline", cat:"Crisis", tags:["Free","LGBTQ+"], purpose:"Trans-led peer support line connecting trans people to community and resources.", link:"https://translifeline.org/", contact:"1-877-330-6366"},
+  {name:"LGBTOUT (U of T)", cat:"Culturally-Specific", tags:["Free","LGBTQ+","Peer support"], purpose:"Student-run group building community and peer support for queer and questioning students.", link:"http://lgbtout.sa.utoronto.ca/"},
+  {name:"LGBTQ Youthline", cat:"Culturally-Specific", tags:["Free","LGBTQ+","Peer support"], purpose:"Peer support by call, text and chat for 2SLGBTQ+ youth.", link:"https://www.youthline.ca/", contact:"1-800-268-9688"},
+  {name:"First Nations House Indigenous Student Services", cat:"Culturally-Specific", tags:["Free","Indigenous","On-campus"], purpose:"Culturally relevant academic and personal support for Indigenous students.", link:"https://studentlife.utoronto.ca/department/first-nations-house/"},
+  {name:"Hope for Wellness Hotline", cat:"Culturally-Specific", tags:["Free","24/7","Indigenous"], purpose:"Immediate help line for Indigenous peoples across Canada.", link:"https://www.hopeforwellness.ca/", contact:"1-855-242-3310"},
+  {name:"Black Youth Helpline", cat:"Culturally-Specific", tags:["Free","Culturally-specific"], purpose:"Professional, culturally appropriate support for Black youth.", link:"https://blackyouth.ca/", contact:"416-285-9944"},
+  {name:"Centre for Women and Trans People (U of T)", cat:"Culturally-Specific", tags:["Free","Women","On-campus"], purpose:"Safe, accessible campus space for women and trans people.", link:"http://womenscentre.sa.utoronto.ca/", contact:"416-978-8201"},
+  {name:"Schlifer Clinic", cat:"Culturally-Specific", tags:["Women","Legal support"], purpose:"Counselling, transition services and legal advice for women experiencing violence.", link:"https://schliferclinic.com/", contact:"416-323-9149"},
+  {name:"Headspace", cat:"Self-Guided", tags:["Free","App"], purpose:"Guided meditation, sleep and mindfulness app.", link:"https://www.headspace.com/"},
+  {name:"Calm", cat:"Self-Guided", tags:["Free","App"], purpose:"Meditation, breathing and sleep app.", link:"https://www.calm.com/"},
+  {name:"Togetherall", cat:"Self-Guided", tags:["Free","Online community"], purpose:"Anonymous peer support forum plus self-guided mental health courses.", link:"https://togetherall.com/en-ca/", contact:"1-866-345-0224"},
+  {name:"7 Cups", cat:"Self-Guided", tags:["Free","App","Online community"], purpose:"Anonymous emotional support community and mindfulness exercises.", link:"https://www.7cups.com/"},
+  {name:"Bounceback Ontario", cat:"Self-Guided", tags:["Free","Guided program"], purpose:"Free guided self-help program with telephone coaching and workbooks.", link:"https://bouncebackontario.ca/", contact:"1-866-345-0224"},
+  {name:"Academic Success (U of T)", cat:"Academic", tags:["Free","On-campus"], purpose:"Learning strategists, study hubs and exam prep sessions.", link:"https://studentlife.utoronto.ca/department/academic-success/", contact:"416-978-7970"},
+  {name:"Accessibility Services (UTSG)", cat:"Academic", tags:["Free","On-campus","Registration required"], purpose:"Academic accommodations for students with disabilities.", link:"https://studentlife.utoronto.ca/department/accessibility-services/", contact:"416-978-8060"},
+  {name:"Learning Strategist (Victoria College)", cat:"Academic", tags:["Free","On-campus"], purpose:"One-on-one advising on study planning, stress management and exam prep.", contact:"416-585-4508"},
+  {name:"Writing Centre (Victoria College)", cat:"Academic", tags:["Free","On-campus"], purpose:"One-on-one help planning, organizing and editing papers.", link:"https://www.vic.utoronto.ca/current-students/registrars-office/writing-centre/"},
+  {name:"Housing Emergency Support (U of T)", cat:"Housing", tags:["Free","Emergency"], purpose:"Campus-specific contacts for urgent housing situations, including after-hours support.", link:"https://studentlife.utoronto.ca/service/housing-emergency-support/"},
+  {name:"Shelter Safe", cat:"Housing", tags:["Free","Emergency"], purpose:"Directory of shelters across Ontario.", link:"https://www.sheltersafe.ca/ontario/"},
+  {name:"Housing Services (U of T)", cat:"Housing", tags:["Free","On-campus"], purpose:"Helps students find on- or off-campus housing.", link:"https://studentlife.utoronto.ca/department/housing/", contact:"416-978-8045"},
+  {name:"Campus Police UTSG / St. George", cat:"Safety", tags:["Free","24/7","Emergency"], purpose:"Emergency and non-emergency campus police contact.", link:"https://campuspolice.utoronto.ca/", contact:"416-978-2222"},
+  {name:"TravelSafer UTSG", cat:"Safety", tags:["Free","On-campus"], purpose:"Campus police member walks you to your destination on campus or nearby transit.", link:"https://campuspolice.utoronto.ca/travelsafer-2/", contact:"416-978-7233"},
+  {name:"Sexual Violence Prevention & Support Centre", cat:"Safety", tags:["Free","On-campus"], purpose:"Support, referrals and accommodations for those impacted by sexual violence.", link:"https://www.svpscentre.utoronto.ca/", contact:"416-978-2266"},
+  {name:"Telehealth Ontario", cat:"Health", tags:["Free","24/7"], purpose:"24/7 nurse-monitored line for medical advice and information.", link:"https://www.ontario.ca/page/get-medical-advice-telehealth-ontario", contact:"1-866-797-0000"},
+  {name:"ConnexOntario", cat:"Health", tags:["Free","24/7"], purpose:"24-hour hotline providing referrals to mental health and addiction treatment services.", link:"https://www.connexontario.ca/en-ca/", contact:"1-866-531-2600"},
+];
+
+const categories = ["Crisis","Counselling","Culturally-Specific","Self-Guided","Academic","Housing","Safety","Health"];
+let activeCat = null;
+let query = "";
+
+const chipRow = document.getElementById('chipRow');
+categories.forEach(cat => {
+  const chip = document.createElement('button');
+  chip.className = 'chip';
+  chip.textContent = cat;
+  chip.setAttribute('aria-pressed', 'false');
+  chip.onclick = () => {
+    activeCat = activeCat === cat ? null : cat;
+    document.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', c.textContent === activeCat ? 'true' : 'false'));
+    render();
+  };
+  chipRow.appendChild(chip);
+});
+
+document.getElementById('search').addEventListener('input', (e) => {
+  query = e.target.value.toLowerCase();
+  render();
+});
+
+function render() {
+  const grid = document.getElementById('grid');
+  const filtered = resources.filter(r => {
+    const matchesCat = !activeCat || r.cat === activeCat;
+    const haystack = (r.name + ' ' + r.purpose + ' ' + r.cat + ' ' + r.tags.join(' ')).toLowerCase();
+    const matchesQuery = !query || haystack.includes(query);
+    return matchesCat && matchesQuery;
+  });
+
+  document.getElementById('resultCount').textContent = `${filtered.length} resource${filtered.length === 1 ? '' : 's'}`;
+  document.getElementById('emptyState').style.display = filtered.length ? 'none' : 'block';
+
+  grid.innerHTML = filtered.map(r => `
+    <div class="card">
+      <h3>${r.name}</h3>
+      <div class="tags">
+        <span class="tag ${r.cat === 'Crisis' ? 'crisis-tag' : ''}">${r.cat}</span>
+        ${r.tags.map(t => `<span class="tag">${t}</span>`).join('')}
+      </div>
+      <p class="purpose">${r.purpose}</p>
+      <div class="meta">
+        ${r.contact ? `<div>${r.contact}</div>` : ''}
+        ${r.link ? `<a href="${r.link}" target="_blank" rel="noopener">Visit site →</a>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+render();
+</script>
+
+</body>
+</html>
